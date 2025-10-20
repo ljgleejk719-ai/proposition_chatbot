@@ -1,3 +1,2 @@
 # requirements.txt
-streamlit
-google-generativeai
+streamlit google-genai==0.1.0
