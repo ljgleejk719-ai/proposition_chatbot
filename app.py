@@ -92,8 +92,8 @@ if prompt := st.chat_input("여기에 답변을 입력하세요..."):
     with st.chat_message("assistant"):
         with st.spinner("튜터가 생각 중..."):
             try:
-                # Gemini 채팅 세션에 사용자 입력 전달 (대화 기록 유지)
-                response = st.session_session.send_message(prompt)
+                # ⚠️ 오타 수정: st.session_session -> st.session_state
+                response = st.session_state.chat_session.send_message(prompt)
                 
                 st.markdown(response.text)
                 
