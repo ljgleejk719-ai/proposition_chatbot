@@ -1,2 +1,2 @@
-# requirements.txt
-streamlit google-genai==0.1.0
+streamlit
+google-genai==0.1.0
