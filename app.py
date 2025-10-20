@@ -7,7 +7,6 @@ import os
 # -----------------------------------------------------------------
 # 1. 챗봇의 '뇌' (시스템 프롬프트)
 # -----------------------------------------------------------------
-# (이전 단계에서 만들었던 챗봇의 규칙을 그대로 가져옵니다)
 SYSTEM_PROMPT = """
 너는 고등학교 수학 선생님이야. 학생에게 '필요조건'과 '충분조건'을 가르쳐야 해.
 다음 규칙을 반드시 지켜:
@@ -40,18 +39,24 @@ st.caption("AI 튜터와 함께 진리집합의 포함관계를 탐색해 보세
 # 3. AI 모델 및 채팅 세션 초기화
 # -----------------------------------------------------------------
 
-# Streamlit의 'Secrets'에서 API 키 가져오기 (배포 시 필수)
-# 로컬 테스트 시: os.environ["GEMINI_API_KEY"] = "내_API_키" 를 사용하거나
-# genai.configure(api_key="내_API_키") 를 직접 사용
+# [로컬 테스트용] 
+# ⚠️ genai.configure... 이 부분에 선생님의 API 키를 직접 넣어주세요.
+# ⚠️ GitHub에 올리기 전에는 이 부분을 지우고 'Secrets' 방식으로 되돌려야 합니다.
 try:
-    genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-except TypeError:
-    st.error("Streamlit Secrets에 GEMINI_API_KEY가 설정되지 않았습니다.")
-    st.stop() # API 키가 없으면 앱 중지
+    # ❗️ 로컬 테스트 시 이 줄에 키를 직접 입력하세요.
+    genai.configure(api_key="여기에_선생님의_API_키를_붙여넣으세요")
+except AttributeError:
+    # ❗️ 배포 시에는 Streamlit Secrets를 사용합니다.
+    try:
+        genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+    except TypeError:
+        st.error("Streamlit Secrets에 GEMINI_API_KEY가 설정되지 않았습니다.")
+        st.stop()
+
 
 # 챗봇 모델 설정 (시스템 프롬프트 적용)
 model = genai.GenerativeModel(
-    model_name='gemini-1.5-flash', # 또는 gemini-1.5-pro
+    model_name='gemini-pro', # 👈 여기가 'gemini-1.5-flash'에서 수정된 부분입니다!
     system_instruction=SYSTEM_PROMPT
 )
 
