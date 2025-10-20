@@ -34,9 +34,9 @@ st.set_page_config(page_title="필요 충분 조건 대화형 튜터", layout="c
 st.title("🤝 필요 충분 조건 대화형 튜터")
 st.caption("AI 튜터와 대화하며 필요 조건과 충분 조건을 마스터하세요!")
 
-# API 키 설정
+# API 키 설정 (Secrets 실패 시 API_KEY 변수를 사용하도록 수정)
 try:
-    api_key = st.secrets["GEMINI_API_KEY"]
+    api_key = st.secrets.get("GEMINI_API_KEY", API_KEY)
 except KeyError:
     api_key = API_KEY
 
@@ -93,7 +93,7 @@ if prompt := st.chat_input("여기에 답변을 입력하세요..."):
         with st.spinner("튜터가 생각 중..."):
             try:
                 # Gemini 채팅 세션에 사용자 입력 전달 (대화 기록 유지)
-                response = st.session_state.chat_session.send_message(prompt)
+                response = st.session_session.send_message(prompt)
                 
                 st.markdown(response.text)
                 
