@@ -2,6 +2,7 @@ import streamlit as st
 from google import genai
 from google.genai import types
 import os
+from datetime import datetime
 
 # -----------------------------------------------------
 # 0. 설정 및 API 키
@@ -19,18 +20,14 @@ SYSTEM_INSTRUCTION_TUTOR = """
 
 [대화 원칙]
 1. **역할극**: 학생에게 친절하고 격려하는 말투로 대화하세요.
-2. **처음 제시하는 문제**:
-    *문제 1: 다음 두 조건 P와 Q를 보고, P는 Q이기 위한 어떤 조건인지 답해주세요. 그리고 그 이유를 진리집합의 포함 관계를 이용하여 설명해 주세요.
-             P: $x^2=1$,Q: $x=1$
-3. **랜덤 문제 제시 및 반복 (강화)**:
-    * 첫 문제의 조건을 잘 말하고 이유도 잘 말한 경우 칭찬과 함께 추가 문제 제공.
-    * 학생에게 **수학과 관련된 랜덤 조건 두 개(P, Q)**를 제시하고 P가 Q이기 위한 어떤 조건인지 (필요/충분/필요충분/아무것도 아님) 물어보세요.
-    * 학생이 **한 문제에 대해 정확한 조건과 논리적 근거를 제시하여 이해했음이 확인되면**, 칭찬과 함께 **새로운 랜덤 조건**을 제시하며 다음 문제로 넘어가세요.
-4. **사고 유도 및 진리집합 강조 (강화)**: 학생이 틀린 답변을 하거나, 정답을 맞혀도 근거가 부족하면 **정답을 바로 알려주지 마세요.**
+2. **랜덤 문제 제시 및 반복 (강화)**:
+    * 대화를 시작할 때, 학생에게 **수학과 관련된 랜덤 명제 두 개(P, Q)**를 제시하고 P가 Q이기 위한 어떤 조건인지 (필요/충분/필요충분/아무것도 아님) 물어보세요.
+    * 학생이 **한 문제에 대해 정확한 조건과 논리적 근거를 제시하여 이해했음이 확인되면**, 칭찬과 함께 **새로운 랜덤 명제**를 제시하며 다음 문제로 넘어가세요.
+3. **사고 유도 및 진리집합 강조 (강화)**: 학생이 틀린 답변을 하거나, 정답을 맞혀도 근거가 부족하면 **정답을 바로 알려주지 마세요.**
     * 학생이 스스로 오류를 발견하고 생각할 수 있도록 **구체적이고 핵심을 짚는 질문**을 던집니다.
     * **특히, 질문을 통해 진리집합의 포함 관계 (P ⊂ Q 인지, Q ⊂ P 인지)를 스스로 추론하도록 유도하세요.**
     * 예시 질문: "P를 만족하는 진리집합이 Q를 만족하는 진리집합에 완전히 포함되나요? 그 반대의 경우는 어떤가요?"
-5. **대화 지속**: 학생의 이해도를 확인하고 다음 논리 단계를 밟도록 유도하여 대화를 이어가세요.
+4. **대화 지속**: 학생의 이해도를 확인하고 다음 논리 단계를 밟도록 유도하여 대화를 이어가세요.
 """
 
 # -----------------------------------------------------
@@ -68,12 +65,42 @@ if "chat_session" not in st.session_state:
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# 3. 화면에 대화 기록 출력
+
+# -----------------------------------------------------
+# 3. 다운로드 기능 구현 함수 (추가)
+# -----------------------------------------------------
+def format_chat_history_for_download():
+    """대화 기록을 텍스트 파일로 저장하기 위해 포맷합니다."""
+    history_text = [f"--- 필요 충분 조건 튜터링 기록 ({datetime.now().strftime('%Y-%m-%d %H:%M:%S')}) ---"]
+    
+    for message in st.session_state.messages:
+        role = "학생" if message["role"] == "user" else "튜터"
+        content = message["content"].replace('\n', ' ') # 줄바꿈 제거
+        history_text.append(f"[{role}]: {content}")
+        
+    return "\n".join(history_text)
+
+# -----------------------------------------------------
+# 4. 화면에 대화 기록 출력 및 다운로드 버튼 추가
+# -----------------------------------------------------
+
+# 다운로드 버튼 추가
+if st.session_state.messages:
+    download_data = format_chat_history_for_download()
+    
+    st.sidebar.download_button(
+        label="📄 대화 내용 다운로드 (.txt)",
+        data=download_data,
+        file_name=f"필요충분조건_튜터링_{datetime.now().strftime('%Y%m%d')}.txt",
+        mime="text/plain"
+    )
+    # 다운로드 버튼은 화면을 깔끔하게 유지하기 위해 사이드바에 배치했습니다.
+
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# 4. 첫 시작 시 AI 튜터의 질문 유도
+# 5. 첫 시작 시 AI 튜터의 질문 유도
 if not st.session_state.messages:
     # 첫 메시지를 Gemini에게 요청하여 대화를 시작
     try:
@@ -86,15 +113,15 @@ if not st.session_state.messages:
     except Exception as e:
         st.error(f"채팅 시작 중 오류가 발생했습니다: {e}")
 
-# 5. 사용자 입력 처리
+# 6. 사용자 입력 처리
 if prompt := st.chat_input("여기에 답변을 입력하세요..."):
     
-    # 5-1. 사용자 메시지를 기록하고 화면에 출력
+    # 6-1. 사용자 메시지를 기록하고 화면에 출력
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
         
-    # 5-2. AI 응답 생성 및 처리
+    # 6-2. AI 응답 생성 및 처리
     with st.chat_message("assistant"):
         with st.spinner("튜터가 생각 중..."):
             try:
@@ -106,7 +133,3 @@ if prompt := st.chat_input("여기에 답변을 입력하세요..."):
                 st.session_state.messages.append({"role": "assistant", "content": response.text})
             except Exception as e:
                 st.error(f"답변 처리 중 오류가 발생했습니다: {e}")
-
-
-
-
