@@ -35,8 +35,8 @@ SYSTEM_INSTRUCTION_TUTOR = """
 # -----------------------------------------------------
 # 2. Streamlit 대화형 UI 및 세션 관리
 # -----------------------------------------------------
-st.set_page_config(page_title="필요 충분 조건 대화형 튜터", layout="centered")
-st.title("🤝 필요 충분 조건 대화형 튜터")
+st.set_page_config(page_title="필요 충분 조건 AI 튜터", layout="centered")
+st.title("🤝 필요 충분 조건 AI 튜터")
 st.caption("AI 튜터와 대화하며 필요 조건과 충분 조건을 마스터하세요!")
 
 # API 키 설정 (Secrets 실패 시 API_KEY 변수를 사용하도록 수정)
@@ -143,3 +143,4 @@ if prompt := st.chat_input("여기에 답변을 입력하세요..."):
                 st.session_state.messages.append({"role": "assistant", "content": response.text})
             except Exception as e:
                 st.error(f"답변 처리 중 오류가 발생했습니다: {e}")
+
