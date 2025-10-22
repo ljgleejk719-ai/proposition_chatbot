@@ -1,3 +1,4 @@
+
 import streamlit as st
 from google import genai
 from google.genai import types
@@ -100,11 +101,20 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# 5. 첫 시작 시 AI 튜터의 질문 유도
+# 5. 첫 시작 시 AI 튜터의 질문 유도 (수정된 부분)
 if not st.session_state.messages:
-    # 첫 메시지를 Gemini에게 요청하여 대화를 시작
+    # 고정된 첫 질문 설정
+    first_question = (
+        "안녕하세요! 필요충분조건 튜터링을 시작하겠습니다.\n\n"
+        "먼저 다음 조건에 대해 생각해봅시다.\n\n"
+        "**조건 P**: $x^2 = 1$\n"
+        "**조건 Q**: $x = 1$\n\n"
+        "**조건 P는 조건 Q이기 위한 무슨 조건일까요?**"
+    )
+    
+    # 첫 메시지를 Gemini에게 요청하여 대화를 시작 (고정 질문 전달)
     try:
-        response = st.session_state.chat_session.send_message("안녕하세요. 필요충분조건 튜터링을 시작해주세요.")
+        response = st.session_state.chat_session.send_message(first_question)
         
         st.session_state.messages.append({"role": "assistant", "content": response.text})
         
